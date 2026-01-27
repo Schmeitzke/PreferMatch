@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Badge } from '../components/UI';
 import api from '../api';
-import { LogOut, Plus, Edit, StopCircle, Clipboard, Check, FolderOpen, Trash2, HelpCircle, User } from 'lucide-react';
+import { LogOut, Plus, Edit, StopCircle, Clipboard, Check, FolderOpen, Trash2, HelpCircle, User, Share2 } from 'lucide-react';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -78,6 +78,13 @@ const AdminDashboard = () => {
         setCopiedCode(code);
         setTimeout(() => setCopiedCode(null), 2000);
     };
+
+    const handleShare = (project: Project) => {
+        const msg = `Please fill in your preferences for ${project.title}.\nCode: ${project.unique_code}\nLink: ${window.location.origin}/`;
+        navigator.clipboard.writeText(msg);
+        alert('Share message copied to clipboard!');
+    };
+
 
     const handleCloseForm = async (projectId: number) => {
         if (!confirm('Are you sure you want to close this form? Students will no longer be able to submit.')) return;
@@ -173,10 +180,24 @@ const AdminDashboard = () => {
                                                     <Button
                                                         variant="secondary"
                                                         size="sm"
-                                                        onClick={() => navigate(`/admin/project/edit/${p.id}`)}
-                                                        title="Edit"
+                                                        onClick={() => {
+                                                            if (p.submission_count > 0) return;
+                                                            navigate(`/admin/project/edit/${p.id}`);
+                                                        }}
+                                                        title={p.submission_count > 0 ? "Cannot edit: Submissions exist" : "Edit"}
+                                                        style={p.submission_count > 0 ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                                                     >
                                                         <Edit size={14} />
+                                                    </Button>
+                                                )}
+                                                {p.is_active && !p.is_closed && (
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        onClick={() => handleShare(p)}
+                                                        title="Share"
+                                                    >
+                                                        <Share2 size={14} />
                                                     </Button>
                                                 )}
                                                 {p.is_active && !p.is_closed && (

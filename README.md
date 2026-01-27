@@ -22,13 +22,35 @@ To eliminate the risk of mistakes in manual student-project assignment by provid
 - **Project Management**: 
     - Create new project forms with multiple options.
     - **Capacity Control**: Define min/max students per option (default 50).
-    - Save drafts or Finalise to go live.
-    - **One-Click Sharing**: Copy student invite codes and link.
+    - **Smart Locking**: Project structure is **locked** once student submissions begin to prevent data corruption.
+    - **Contextual Actions**: Share buttons only appear for active, open projects.
     - Close forms to stop submissions.
 - **Algorithm & Results**:
-    - Trigger the optimization algorithm with one click.
+    - **Auto-Calculation**: Results are automatically computed/recomputed on page load.
     - View assignments (Student -> Project).
     - **Export**: Download results as a clean JSON file.
+
+## 🧠 Optimization Algorithm Explained
+
+We use a robust mathematical approach to ensure the fairest possible distribution of students to projects.
+
+### The Logic: Minimize "Cost"
+Think of a student's preference as a "cost". Getting their 1st choice costs **1 point**, 2nd choice costs **2 points**, and so on. Our goal is to minimize the **Total Cost** for the entire group.
+
+### Step-by-Step Process (Linear Sum Assignment)
+1.  **Slot Expansion**: 
+    If "Option A" has a capacity of 3, the algorithm treats it as 3 separate available seats: `A_1`, `A_2`, `A_3`. This converts the problem into a one-to-one matching problem.
+    
+2.  **Cost Matrix**: 
+    We create a grid where every Student is a row and every Slot is a column.
+    - If Student X ranked Option A as 1st choice, the "cost" for seats `A_1`, `A_2`, `A_3` is **1**.
+    - If they didn't rank Option B, the cost is set very high (e.g., 1000) to discourage that assignment unless absolutely necessary.
+
+3.  **The Solver (Hungarian Algorithm)**: 
+    We use the `scipy.optimize.linear_sum_assignment` function. This explores combinations to find the unique set of assignments where the sum of all ranks is the lowest possible number.
+
+**Why is this better than "First Come, First Served"?**
+It considers the entire group's happiness. One student might get their 2nd choice so that two other students can get their 1st choice, resulting in a better overall outcome than one happy student and two unhappy ones.
 
 ## 🛠 Tech Stack
 
@@ -37,6 +59,7 @@ To eliminate the risk of mistakes in manual student-project assignment by provid
     - Type-safe Pydantic schemas.
     - JWT Authentication (BCrypt + Salt + Pepper).
     - SQLAlchemy models.
+    - **Scientific Computing**: `NumPy` and `SciPy` for optimization.
 - **Frontend**: **React** (Vite) + TypeScript.
     - **Vanilla CSS** (Variables-based) for a premium, custom "Shadcn-like" look.
     - `@dnd-kit` for accessible drag-and-drop interactions.
@@ -48,7 +71,7 @@ To eliminate the risk of mistakes in manual student-project assignment by provid
 - Docker & Docker Compose installed.
 
 ### Environment Variables
-Create a `.env` file in the root directory (see `.env.example` or use the template below):
+Create a `.env` file in the root directory:
 
 ```env
 # Backend Security
@@ -79,7 +102,7 @@ docker compose -f docker-compose.prod.yml up --build -d
 ├── backend/
 │   ├── app/
 │   │   ├── routers/       # API endpoints (admin, projects, students)
-│   │   ├── algorithm.py   # Optimization logic
+│   │   ├── algorithm.py   # Optimization logic (Hungarian Algorithm)
 │   │   ├── auth.py        # Security & JWT
 │   │   ├── models.py      # Database Schema
 │   │   └── main.py        # App Entrypoint

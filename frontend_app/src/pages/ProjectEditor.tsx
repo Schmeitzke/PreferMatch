@@ -21,6 +21,7 @@ const ProjectEditor = () => {
     ]);
     const [isFinalised, setIsFinalised] = useState(false);
     const [uniqueCode, setUniqueCode] = useState('');
+    const [submissionCount, setSubmissionCount] = useState(0);
 
     useEffect(() => {
         if (id) {
@@ -32,6 +33,7 @@ const ProjectEditor = () => {
                 })));
                 setIsFinalised(res.data.is_active);
                 setUniqueCode(res.data.unique_code);
+                setSubmissionCount(res.data.submission_count || 0);
             });
         }
     }, [id]);
@@ -107,10 +109,15 @@ const ProjectEditor = () => {
                 </Button>
                 <h1 className="editor-title">{id ? 'Edit Project' : 'New Project'}</h1>
                 <div className="editor-actions">
-                    <Button variant="secondary" onClick={() => handleSave(false)}>
+                    {submissionCount > 0 && (
+                        <span style={{ color: 'var(--destructive)', fontSize: '0.875rem', fontWeight: 500, marginRight: '1rem' }}>
+                            Cannot edit: {submissionCount} submission(s)
+                        </span>
+                    )}
+                    <Button variant="secondary" onClick={() => handleSave(false)} disabled={submissionCount > 0}>
                         Save Draft
                     </Button>
-                    <Button onClick={() => handleSave(true)}>Finalise</Button>
+                    <Button onClick={() => handleSave(true)} disabled={submissionCount > 0}>Finalise</Button>
                     {isFinalised && (
                         <Button variant="secondary" size="icon" onClick={handleShare} title="Share">
                             <Share2 size={16} />

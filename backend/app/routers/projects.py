@@ -63,6 +63,8 @@ def get_project(project_id: int, db: Session = Depends(database.get_db), current
     project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == current_user.id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    project.submission_count = db.query(models.Student).filter(models.Student.project_id == project.id).count()
     return project
 
 @router.put("/{project_id}", response_model=schemas.ProjectResponse)
@@ -70,6 +72,10 @@ def update_project(project_id: int, project_data: schemas.ProjectCreate, db: Ses
     project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == current_user.id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    submission_count = db.query(models.Student).filter(models.Student.project_id == project_id).count()
+    if submission_count > 0:
+        raise HTTPException(status_code=400, detail="Cannot edit project with existing submissions")
     
     project.title = project_data.title
     
@@ -87,7 +93,9 @@ def update_project(project_id: int, project_data: schemas.ProjectCreate, db: Ses
         db.add(db_option)
     
     db.commit()
+    db.commit()
     db.refresh(project)
+    project.submission_count = 0
     return project
 
 @router.delete("/{project_id}")

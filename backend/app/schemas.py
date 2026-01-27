@@ -54,6 +54,7 @@ class ProjectResponse(ProjectBase):
     is_closed: bool
     archived: bool
     options: List[OptionResponse]
+    submission_count: int = 0
     class Config:
         from_attributes = True
 

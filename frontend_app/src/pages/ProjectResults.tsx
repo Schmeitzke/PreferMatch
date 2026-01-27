@@ -31,9 +31,12 @@ const ProjectResults = () => {
 
     useEffect(() => {
         if (id) {
-            api.get(`/api/projects/${id}/results`)
+            setLoading(true);
+            api.post(`/api/projects/${id}/calculate`)
+                .then(() => api.get(`/api/projects/${id}/results`))
                 .then((res) => setResults(res.data))
-                .catch(() => { });
+                .catch(() => alert('Failed to calculate results.'))
+                .finally(() => setLoading(false));
         }
     }, [id]);
 
@@ -65,7 +68,7 @@ const ProjectResults = () => {
                     </Button>
                 ) : (
                     <Button onClick={handleCalculate} disabled={loading}>
-                        {loading ? 'Calculating...' : 'Calculate Results'}
+                        {loading ? 'Calculating...' : 'Recalculate Results'}
                     </Button>
                 )}
             </div>
