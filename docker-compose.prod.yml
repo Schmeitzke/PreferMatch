@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    restart: always
+    env_file:
+      - .env
+
+  frontend:
+    build: ./frontend_app
+    command: npm run build && npm run preview -- --host --port 5173
+    ports:
+      - "80:5173"
+    depends_on:
+      - backend

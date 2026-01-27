@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+python-jose[cryptography]
+passlib
+bcrypt==3.2.2
+pydantic[email]
+python-multipart
+scipy
+numpy
+pandas

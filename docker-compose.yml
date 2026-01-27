@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    container_name: group_assignment_backend
+
+  frontend:
+    build: ./frontend_app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend_app:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    container_name: group_assignment_frontend
