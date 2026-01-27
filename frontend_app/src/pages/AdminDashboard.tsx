@@ -12,8 +12,12 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children, activeTab = 'projects' }: AdminLayoutProps) => {
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
+    const handleLogout = async () => {
+        try {
+            await api.post('/api/admin/logout');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
         navigate('/');
     };
 

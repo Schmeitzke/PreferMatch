@@ -23,7 +23,20 @@ const ProjectEditor = () => {
     const [uniqueCode, setUniqueCode] = useState('');
     const [submissionCount, setSubmissionCount] = useState(0);
 
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [loginError, setLoginError] = useState('');
+    const [pendingFinalise, setPendingFinalise] = useState<boolean | null>(null);
+
     useEffect(() => {
+        // Verify authentication immediately
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/admin/login');
+            return;
+        }
+
         if (id) {
             api.get(`/api/projects/${id}`).then((res) => {
                 setTitle(res.data.title);
@@ -34,9 +47,13 @@ const ProjectEditor = () => {
                 setIsFinalised(res.data.is_active);
                 setUniqueCode(res.data.unique_code);
                 setSubmissionCount(res.data.submission_count || 0);
+            }).catch((err) => {
+                if (err.response && err.response.status === 401) {
+                    navigate('/admin/login');
+                }
             });
         }
-    }, [id]);
+    }, [id, navigate]);
 
     const handleAddOption = () => {
         setOptions([
@@ -89,9 +106,43 @@ const ProjectEditor = () => {
                 await api.put(`/api/projects/${projectId}/finalise`);
             }
 
+            // Success - if we were pending a retry, clear it
+            setPendingFinalise(null);
+            setShowLoginModal(false);
+            setLoginPassword('');
+
             navigate('/admin/dashboard');
+        } catch (err: any) {
+            console.error('Save error:', err);
+            if (err.response && err.response.status === 401) {
+                // Session expired - show modal
+                setPendingFinalise(finalise);
+                setShowLoginModal(true);
+            } else {
+                alert('Error saving project. Please try again.');
+            }
+        }
+    };
+
+    const handleRelogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoginError('');
+
+        try {
+            const formData = new FormData();
+            formData.append('username', loginEmail);
+            formData.append('password', loginPassword);
+            const res = await api.post('/api/admin/login', formData);
+            localStorage.setItem('token', res.data.access_token);
+
+            // Retry the save
+            if (pendingFinalise !== null) {
+                handleSave(pendingFinalise);
+            } else {
+                setShowLoginModal(false);
+            }
         } catch {
-            alert('Error saving project.');
+            setLoginError('Invalid email or password.');
         }
     };
 
@@ -248,6 +299,64 @@ const ProjectEditor = () => {
                     Add Option
                 </Button>
             </div>
+
+            {showLoginModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <Card className="card-content" style={{ width: '100%', maxWidth: '400px', backgroundColor: 'white' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <h3 className="auth-title" style={{ fontSize: '1.25rem' }}>Session Expired</h3>
+                            <p className="auth-subtitle">Please sign in again to save your work.</p>
+                        </div>
+
+                        {loginError && (
+                            <div className="alert alert-error form-group">{loginError}</div>
+                        )}
+
+                        <form onSubmit={handleRelogin}>
+                            <div className="form-group">
+                                <Label htmlFor="relogin-email">Email</Label>
+                                <Input
+                                    id="relogin-email"
+                                    type="email"
+                                    value={loginEmail}
+                                    onChange={(e) => setLoginEmail(e.target.value)}
+                                    required
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="form-group">
+                                <Label htmlFor="relogin-password">Password</Label>
+                                <Input
+                                    id="relogin-password"
+                                    type="password"
+                                    value={loginPassword}
+                                    onChange={(e) => setLoginPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                                <Button type="button" variant="secondary" onClick={() => setShowLoginModal(false)} style={{ flex: 1 }}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" style={{ flex: 1 }}>
+                                    Sign In & Save
+                                </Button>
+                            </div>
+                        </form>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 };

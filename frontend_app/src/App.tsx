@@ -8,10 +8,12 @@ import AdminDashboard from './pages/AdminDashboard';
 import AccountSettings from './pages/AccountSettings';
 import ProjectEditor from './pages/ProjectEditor';
 import ProjectResults from './pages/ProjectResults';
+import SessionManager from './components/SessionManager';
 
 function App() {
   return (
     <Router>
+      <SessionManager />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/student/preference" element={<StudentPreference />} />
