@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input, Card, Label } from '../components/UI';
+import api from '../api';
 
 const AdminLogin = () => {
     const [email, setEmail] = useState('');
@@ -16,8 +17,11 @@ const AdminLogin = () => {
             const formData = new FormData();
             formData.append('username', email);
             formData.append('password', password);
+
+            await api.post('/api/admin/login', formData);
             navigate('/admin/dashboard');
-        } catch {
+        } catch (err) {
+            console.error('Login error:', err);
             setError('Invalid email or password. Please try again.');
         }
     };

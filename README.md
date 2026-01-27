@@ -30,6 +30,24 @@ To eliminate the risk of mistakes in manual student-project assignment by provid
     - View assignments (Student -> Project).
     - **Export**: Download results as a clean JSON file.
 
+## 📸 Interface Preview
+
+### 1. Secure Admin Portal
+The entry point for users to securely access the system.
+![Admin Login](screenshots/user_login.png)
+
+### 2. Admin Dashboard
+Manage all projects, view unique student access codes, and track submission progress.
+![Admin Dashboard](screenshots/admin_dashboard.png)
+
+### 3. Form Editor with Capacity Control
+Create and edit project options, setting specific descriptions and student capacities for each.
+![Form Editor](screenshots/form_editor.png)
+
+### 4. Student Ranking Interface
+Students easily rank their preferences using an intuitive drag-and-drop system.
+![Student Form](screenshots/form.png)
+
 ## 🧠 Optimization Algorithm Explained
 
 We use a robust mathematical approach to ensure the fairest possible distribution of students to projects.
