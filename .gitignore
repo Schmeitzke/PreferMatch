@@ -16,6 +16,7 @@ desktop.ini
 *.njsproj
 *.sln
 *.user
+.agent/
 
 # Python
 __pycache__/
