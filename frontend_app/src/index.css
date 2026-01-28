@@ -1012,3 +1012,20 @@ textarea.input {
 .link:hover {
   opacity: 0.7;
 }
+
+.btn-success {
+  background-color: var(--success);
+  color: var(--primary-foreground);
+  border-color: var(--success);
+}
+
+.btn-success:hover {
+  background-color: #15803d;
+  border-color: #15803d;
+  transform: scale(1.05);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-success:active {
+  transform: scale(0.95);
+}

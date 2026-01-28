@@ -83,3 +83,22 @@ class AssignmentResult(BaseModel):
     student_number: str
     assigned_option_title: str
     assigned_option_id: int
+
+class PreferenceDetail(BaseModel):
+    option_id: int
+    rank: int
+    class Config:
+        from_attributes = True
+
+class StudentDetail(BaseModel):
+    id: int
+    student_number: str
+    preferences: List[PreferenceDetail]
+    class Config:
+        from_attributes = True
+
+class StudentUpdate(BaseModel):
+    student_number: Optional[str] = None
+    preferences: List[PreferenceItem]
+
+

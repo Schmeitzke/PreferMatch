@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .. import models, schemas, database, auth, algorithm
 import uuid
+import pandas as pd
+from io import BytesIO
+import json
 from typing import List
 
 router = APIRouter()
@@ -171,4 +175,103 @@ def get_results(project_id: int, db: Session = Depends(database.get_db), current
                 "assigned_option_id": s.assigned_option_id
             })
             
-    return results
+@router.get("/{project_id}/students", response_model=List[schemas.StudentDetail])
+def get_students(project_id: int, db: Session = Depends(database.get_db), current_user: models.Admin = Depends(auth.get_current_user)):
+    project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    students = db.query(models.Student).filter(models.Student.project_id == project_id).all()
+    return students
+
+@router.put("/{project_id}/students/{student_id}")
+def update_student(project_id: int, student_id: int, update_data: schemas.StudentUpdate, db: Session = Depends(database.get_db), current_user: models.Admin = Depends(auth.get_current_user)):
+    project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    student = db.query(models.Student).filter(models.Student.id == student_id, models.Student.project_id == project_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    if update_data.student_number:
+        # Check uniqueness
+        exists = db.query(models.Student).filter(
+            models.Student.project_id == project_id, 
+            models.Student.student_number == update_data.student_number,
+            models.Student.id != student_id
+        ).first()
+        if exists:
+            raise HTTPException(status_code=409, detail="Student number already exists")
+        student.student_number = update_data.student_number
+    
+    if update_data.preferences:
+        # Remove old prefs
+        db.query(models.Preference).filter(models.Preference.student_id == student_id).delete()
+        # Add new prefs
+        for pref in update_data.preferences:
+            db_pref = models.Preference(
+                student_id=student.id,
+                option_id=pref.option_id,
+                rank=pref.rank
+            )
+            db.add(db_pref)
+            
+    db.commit()
+    return {"status": "updated"}
+
+@router.delete("/{project_id}/students/{student_id}")
+def delete_student(project_id: int, student_id: int, db: Session = Depends(database.get_db), current_user: models.Admin = Depends(auth.get_current_user)):
+    project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    student = db.query(models.Student).filter(models.Student.id == student_id, models.Student.project_id == project_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+        
+    db.delete(student)
+    db.commit()
+    return {"status": "deleted"}
+
+@router.get("/{project_id}/export")
+def export_results(project_id: int, format: str = "json", db: Session = Depends(database.get_db), current_user: models.Admin = Depends(auth.get_current_user)):
+    project = db.query(models.Project).filter(models.Project.id == project_id, models.Project.owner_id == current_user.id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+        
+    results = []
+    students = db.query(models.Student).filter(models.Student.project_id == project_id).all()
+    options_map = {o.id: o.title for o in project.options}
+    
+    for s in students:
+        assigned_option = options_map.get(s.assigned_option_id, "Unassigned")
+        results.append({
+            "Student ID": s.student_number,
+            "Assigned Project": assigned_option
+        })
+    
+    if format == "json":
+        return results
+    elif format == "txt":
+        content = "Student ID\tAssigned Project\n"
+        for r in results:
+            content += f"{r['Student ID']}\t{r['Assigned Project']}\n"
+        return StreamingResponse(
+            BytesIO(content.encode()),
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename=results_{project_id}.txt"}
+        )
+    elif format == "excel":
+        df = pd.DataFrame(results)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Results')
+        output.seek(0)
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename=results_{project_id}.xlsx"}
+        )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format")

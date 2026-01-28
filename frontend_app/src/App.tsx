@@ -8,6 +8,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AccountSettings from './pages/AccountSettings';
 import ProjectEditor from './pages/ProjectEditor';
 import ProjectResults from './pages/ProjectResults';
+import ProjectSubmissions from './pages/ProjectSubmissions';
 import SessionManager from './components/SessionManager';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/admin/project/new" element={<ProjectEditor />} />
         <Route path="/admin/project/edit/:id" element={<ProjectEditor />} />
         <Route path="/admin/project/results/:id" element={<ProjectResults />} />
+        <Route path="/admin/project/submissions/:id" element={<ProjectSubmissions />} />
       </Routes>
     </Router>
   );

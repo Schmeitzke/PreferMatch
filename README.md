@@ -23,12 +23,16 @@ To eliminate the risk of mistakes in manual student-project assignment by provid
     - Create new project forms with multiple options.
     - **Capacity Control**: Define min/max students per option (default 50).
     - **Smart Locking**: Project structure is **locked** once student submissions begin to prevent data corruption.
+    - **Submission Management**: 
+        - View all student entries within a project.
+        - **Safe Editing**: Edit student IDs and preferences with smart validation (auto-capped inputs, fixed option count).
+        - Delete invalid submissions.
     - **Contextual Actions**: Share buttons only appear for active, open projects.
     - Close forms to stop submissions.
 - **Algorithm & Results**:
     - **Auto-Calculation**: Results are automatically computed/recomputed on page load.
     - View assignments (Student -> Project).
-    - **Export**: Download results as a clean JSON file.
+    - **Export**: Download results as JSON, Excel (`.xlsx`), or Text (`.txt`).
 
 ## 📸 Interface Preview
 

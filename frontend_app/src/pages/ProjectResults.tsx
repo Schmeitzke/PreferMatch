@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Card, Badge } from '../components/UI';
 import api from '../api';
-import { Download, BarChart3 } from 'lucide-react';
+import { Download, BarChart3, FileText } from 'lucide-react';
 
 interface ProjectResult {
     student_number: string;
@@ -40,15 +40,19 @@ const ProjectResults = () => {
         }
     }, [id]);
 
-    const handleDownload = () => {
-        const dataStr =
-            'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(results, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute('href', dataStr);
-        downloadAnchorNode.setAttribute('download', `results_${id}.json`);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+    const handleExport = (format: 'json' | 'txt' | 'excel') => {
+        api.get(`/api/projects/${id}/export?format=${format}`, { responseType: 'blob' })
+            .then((response) => {
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                const ext = format === 'excel' ? 'xlsx' : format;
+                link.setAttribute('download', `results_${id}.${ext}`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            })
+            .catch(() => alert('Export failed'));
     };
 
     return (
@@ -62,10 +66,17 @@ const ProjectResults = () => {
                     {results.length > 0 && <Badge variant="success">Calculated</Badge>}
                 </div>
                 {results.length > 0 ? (
-                    <Button onClick={handleDownload}>
-                        <Download size={16} />
-                        Download JSON
-                    </Button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Button onClick={() => handleExport('json')} variant="secondary" size="sm">
+                            <Download size={16} /> JSON
+                        </Button>
+                        <Button onClick={() => handleExport('txt')} variant="secondary" size="sm">
+                            <FileText size={16} /> TXT
+                        </Button>
+                        <Button onClick={() => handleExport('excel')} variant="secondary" size="sm">
+                            <BarChart3 size={16} /> Excel
+                        </Button>
+                    </div>
                 ) : (
                     <Button onClick={handleCalculate} disabled={loading}>
                         {loading ? 'Calculating...' : 'Recalculate Results'}

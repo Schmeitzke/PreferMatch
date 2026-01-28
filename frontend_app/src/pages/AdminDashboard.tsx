@@ -156,9 +156,14 @@ const AdminDashboard = () => {
                             </thead>
                             <tbody>
                                 {projects.map((p) => (
-                                    <tr key={p.id}>
+                                    <tr
+                                        key={p.id}
+                                        onClick={() => navigate(`/admin/project/submissions/${p.id}`)}
+                                        style={{ cursor: 'pointer', transition: 'background-color 0.2s' }}
+                                        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    >
                                         <td style={{ fontWeight: 500 }}>{p.title}</td>
-                                        <td>
+                                        <td onClick={(e) => e.stopPropagation()}>
                                             <span
                                                 className="code-badge"
                                                 onClick={() => handleCopy(p.unique_code)}
@@ -178,7 +183,7 @@ const AdminDashboard = () => {
                                             </span>
                                         </td>
                                         <td>{getStatusBadge(p)}</td>
-                                        <td>
+                                        <td onClick={(e) => e.stopPropagation()}>
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 {!p.is_closed && (
                                                     <Button
